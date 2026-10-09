@@ -71,6 +71,9 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Output and current verification
 
+- 🔴 v1.17.0 caused an Affinity freeze/crash when the user started it from the Scripts panel. Do not run it. Its timer-resumed generator retained native document traversal state across callbacks; this is a suspected cause, not yet proven by a current crash stack. The available crash report predates this incident. v1.18.0 removes the timer architecture and adds an early in-process budget (20 pages, 800 objects, 50,000 text characters, 4 megapixels of direct image encoding per document); over-budget images use the page-raster fallback, while over-budget documents stop with an explicit error before export. Syntax and VM checks passed. Real Script Panel verification remains pending.
+- 🟡 v1.18.0 is installed in Script Manager, and `tests/installed_idml_v1.18.0.js` matches its source SHA-256 hash. A host probe using a tiny generated IDML as source did not complete: the Affinity process was no longer running before an export folder appeared, and no current crash event identified which step failed. This does not verify v1.18.0 in the Scripts panel. Do not infer that the probe isolated an exporter crash; the generated IDML import itself may have failed.
+- 🔴 Installed v1.17.0 is unsafe and remains in Script Manager because its MCP interface exposes no delete operation and the Windows UI automation helper fails to start. Do not remove the last safer installed version, v1.16.0, merely to satisfy the two-version cleanup rule while v1.17.0 remains unsafe. Remove v1.17.0 through the UI when available, then verify the library list.
 - 🟡 Release cleanup rule: after verifying a new Script Manager installation, remove the installed script two versions older, retain the previous version, and verify the removal. v1.17.0 is installed and its read-back source hash matches, so installed v1.15.0 should now be removed. The host MCP exposes list/read/save but no delete operation, and the Windows UI automation runtime fails to start. The library still lists v1.15.0; removal remains pending.
 - 🟡 v1.17.0 addresses Script Panel startup freezes: document objects are scanned in timer-driven slices, page previews yield between pages, and direct JavaScript image encoding has an 8-megapixel document-wide budget. Images beyond that budget trigger the page raster fallback and are not separately editable in IDML. Syntax and VM tests cover the scheduled launch. Opening the Script Manager panel restored its MCP connection; v1.17.0 was installed and `tests/installed_idml_v1.17.0.js` matches the source SHA-256 hash. Real Script Panel responsiveness and the result dialog after a timer callback remain unverified.
 - 🟡 v1.16.0 removes the FB-tavasz content-mix trigger and fallback-only text scaling. Typography is read as point-valued host data on every document; page geometry alone uses 72/DPI. Artistic text frames receive composition room on every document. Raster fallback is selected per page by vector-gradient presence, including pages without text, while unaffected pages retain their editable artwork. Syntax and VM tests passed. A separate 144-DPI host document exposed glyph heights of 92 and 40 point-like units, independently supporting the unit correction; visual round-trip verification remains open.
@@ -106,7 +109,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Project files
 
-- Exporter: `finished scripts/Export to IDML v1.17.0.js`
+- Exporter: `finished scripts/Export to IDML v1.18.0.js`
 - Runner: `tools/run_idml_export.cjs`
 - Tests and probes: `tests/idml_export.cjs`, `tests/probe_idml_*.js`
 - Shared API references: `I:\Affinity\scripts\workspace\docs`
