@@ -25,7 +25,7 @@ The versioned `Export to IDML via MCP` launchers call the same runner. Bridge ac
 ## Test
 
 ```powershell
-node --check "finished scripts/Export to IDML v1.18.0.js"
+node --check "finished scripts/Export to IDML v1.19.0.js"
 node tests/idml_export.cjs
 ```
 
@@ -39,6 +39,6 @@ The VM test covers IDML packaging, XML, text formatting, diagnostics and unique 
 - `IDML_EXPORT_ROADMAP.md` — English feature and verification status.
 - `agents.md` — project workflow rules; the roadmap must be updated with every exporter, test or host-finding change.
 
-The newest exporter is **v1.18.0**. **Do not run v1.17.0:** it froze or crashed Affinity when launched from the Scripts panel. v1.18.0 removes its timer-based native traversal and checks an in-process size budget before exporting. It stops with an explicit error above 20 pages, 800 objects or 50,000 text characters; direct image encoding is capped at 4 megapixels per document, with larger images represented in a page raster and no longer separately editable. It also treats host typography values as points independently of document DPI and uses ASCII-safe output paths. The Script Panel behavior of v1.18.0 still needs a real-host check.
+The recommended exporter is **v1.19.0**. Its executable code is identical to the previously working v1.15.0; only version metadata changed. **Do not run v1.17.0 or v1.18.0:** both were reported to freeze or close Affinity at launch, including on a one-circle document. The v1.17 timer-resumed traversal and the v1.18 preflight traversal are withdrawn. The global text-unit and feature-based fallback changes from v1.16.0 will be reintroduced one at a time after host verification.
 
 Local Affinity documents, generated IDML packages and comparison screenshots are kept out of the public repository.

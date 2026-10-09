@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.18.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.19.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
@@ -151,13 +151,18 @@ gradientFixture.spreads[0].objects[0].fill = { type: 'gradient', kind: 'Linear',
 ] };
 gradientFixture.spreads[0].objects[0].fillAngle = 45;
 const gradientParts = api.makeParts(gradientFixture);
-assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: gradientFixture.spreads })), [0]);
-assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: fixture.spreads })), []);
-assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: [{ objects: [], requiresRasterFallback: true }] })), [0]);
-assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: [fixture.spreads[0], gradientFixture.spreads[0]] })), [1]);
-const gradientWithoutText = JSON.parse(JSON.stringify(gradientFixture.spreads[0]));
-gradientWithoutText.frames = [];
-assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: [gradientWithoutText] })), [0]);
+assert.equal(api.needsHybridArtwork({ spreads: gradientFixture.spreads }), true);
+assert.equal(api.needsHybridArtwork({ spreads: fixture.spreads }), false);
+const hybridText = { diagnostics: { dpi: 192 }, spreads: [{ frames: [{
+    artText: true, width: 100, height: 20,
+    runs: [{ style: { family: 'Gotham', pointSize: 14.25, leading: 15 } }],
+    paragraphCharacterStyles: [], paragraphs: [{ leading: 12 }],
+}] }] };
+api.applyHybridTextMetrics(hybridText);
+assert.equal(hybridText.spreads[0].frames[0].width, 200);
+assert.equal(hybridText.spreads[0].frames[0].height, 40);
+assert.equal(hybridText.spreads[0].frames[0].runs[0].style.pointSize, 38);
+assert.equal(hybridText.spreads[0].frames[0].paragraphs[0].leading, 32);
 assert.match(gradientParts.find(p => p.name === 'Resources/Graphic.xml').content,
     /<Gradient Self="Gradient\/idml1"/);
 assert.match(gradientParts.find(p => p.name === 'Spreads/Spread_spread1.xml').content,
@@ -177,19 +182,6 @@ assert.equal(packageBytes[1], 0x4b);
 assert.ok(packageBytes.length > 100);
 assert.equal(api.chooseFolder('C:\\Desktop', 'test.af', p => p.endsWith('/test IDML export')),
     'C:\\Desktop/test IDML export 2');
-assert.equal(api.chooseFolder('C:\\Desktop', 'Földmunkagép-szerelőt.psd', () => false),
-    'C:\\Desktop/Foldmunkagep-szerelot IDML export');
-
-const lightDoc = { spreads: [{ layers: { all: [
-    { isFrameTextNode: true, storyRange: { begin: 0, end: 12 } },
-    { isImageNode: true, rasterWidth: 10000, rasterHeight: 10000 },
-] } }] };
-assert.equal(api.checkInProcessBudget(lightDoc).objects, 2);
-const tooMany = Array.from({ length: 801 }, () => ({}));
-assert.throws(() => api.checkInProcessBudget({ spreads: [{ layers: { all: tooMany } }] }), /800 objects/);
-assert.throws(() => api.checkInProcessBudget({ spreads: [{ layers: { all: [
-    { isArtTextNode: true, storyRange: { begin: 0, end: 50001 } },
-] } }] }), /50000 text characters/);
 
 const py = [
     'import io, sys, zipfile, xml.etree.ElementTree as ET',
@@ -294,14 +286,14 @@ const read = api.readModel({
 assert.equal(read.spreads[0].frames[0].runs.length, 2);
 assert.equal(read.spreads[0].frames[0].runs[0].text, 'A&\n');
 assert.equal(read.spreads[0].frames[0].runs[1].text, 'BC');
-assert.equal(read.spreads[0].frames[0].runs[1].style.pointSize, 28);
+assert.equal(read.spreads[0].frames[0].runs[1].style.pointSize, 14);
 assert.equal(read.spreads[0].frames[0].runs[0].style.kerningValue, undefined);
 assert.equal(read.spreads[0].frames[0].runs[0].style.kerningMethod, '$ID/None');
 assert.equal(read.spreads[0].frames[0].runs[1].style.kerningValue, 100);
 assert.match(api.makeParts(read).find(p => p.name.startsWith('Stories/')).content,
     /KerningMethod="\$ID\/None" KerningValue="100"/);
 assert.equal(read.spreads[0].frames[0].paragraphs[0].hyphenation, 'false');
-assert.equal(read.spreads[0].frames[0].paragraphs[0].spaceAfter, 20);
+assert.equal(read.spreads[0].frames[0].paragraphs[0].spaceAfter, 10);
 assert.equal(read.spreads[0].frames[0].paragraphs[1].hyphenation, 'true');
 assert.equal(read.diagnostics.summary.approximated, 1);
 assert.equal(read.diagnostics.pages[0].objects[0].type, 'frameText');
@@ -330,10 +322,10 @@ const absoluteRead = api.readModel({ dpi: 144, title: 'Absolute leading', spread
     layers: { all: [textNode] } }] }, absoluteFontApi);
 assert.equal(absoluteRead.diagnostics.pages[0].objects[0].propertyAudit['paragraph.leading'].state,
     'exported');
-assert.equal(absoluteRead.diagnostics.pages[0].objects[0].propertyAudit['paragraph.leading'].source.examples[0], 30);
+assert.equal(absoluteRead.diagnostics.pages[0].objects[0].propertyAudit['paragraph.leading'].source.examples[0], 15);
 const absoluteStory = api.makeParts(absoluteRead)
     .find(p => p.name.startsWith('Stories/')).content;
-assert.match(absoluteStory, /Leading="30"/);
+assert.match(absoluteStory, /Leading="15"/);
 const terminalNode = {
     ...textNode,
     storyRange: { begin: 0, end: 4 },

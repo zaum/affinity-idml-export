@@ -11,10 +11,10 @@ const { Client } = managerRequire('@modelcontextprotocol/sdk/client/index.js');
 const { SSEClientTransport } = managerRequire('@modelcontextprotocol/sdk/client/sse.js');
 const { CallToolResultSchema } = managerRequire('@modelcontextprotocol/sdk/types.js');
 
-const scriptPath = path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.18.0.js');
+const scriptPath = path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.19.0.js');
 const source = fs.readFileSync(scriptPath, 'utf8');
 const transport = new SSEClientTransport(new URL('http://localhost:6767/sse'));
-const client = new Client({ name: 'idml-export', version: '1.18.0' });
+const client = new Client({ name: 'idml-export', version: '1.19.0' });
 
 function content(result) {
     return (result.content || []).filter(item => item.type === 'text').map(item => item.text).join('\n');
