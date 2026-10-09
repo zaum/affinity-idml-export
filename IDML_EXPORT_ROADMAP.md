@@ -1,6 +1,6 @@
 # Affinity to IDML Export Roadmap
 
-Updated: 2026-10-09. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.20.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
+Updated: 2026-10-09. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.21.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
 
 ## Status key
 
@@ -28,7 +28,7 @@ These icons describe implementation progress. They do not certify visual or typo
 | Feature | Status | Remaining work |
 |---|---|---|
 | Editable text frames, Unicode and paragraph boundaries | 🟢 | A one-line frame shorter than its exported font size is expanded vertically. Check empty paragraphs, multi-line overset and end-of-story formatting visually. |
-| Font family, face, PostScript name and size | 🟢 | Test missing and variable fonts. Font files are not packaged. |
+| Font family, face, PostScript name and size | 🟢 | Apply Affinity StoryInterface `textUiScale` to glyph metrics before writing IDML. Test missing and variable fonts. Font files are not packaged. |
 | Tracking, automatic and manual kerning, scaling, skew, baseline shift | 🟡 | Compare zero, Auto and manual values through a round trip. |
 | Paragraph spacing, indents, leading and auto leading | 🟡 | Fixed paragraph leading is now written on character ranges, including empty paragraph markers. Compare its layout in InDesign and check glyph overrides. |
 | Hyphenation, alignment, word and letter spacing, keep options | 🟡 | Verify the full value range for each mapped property. |
@@ -46,7 +46,7 @@ These icons describe implementation progress. They do not certify visual or typo
 | Visibility | 🟡 | Source layer visibility and object visibility are written separately. Hidden groups are still flattened. |
 | Groups, layer names and hierarchy, locks and print state | 🟡 | ContainerNode names become flat IDML layers; nested names become a joined path, and source locks are copied when readable. Group nodes are flattened. Identically named paths may merge. |
 | Object stacking order | 🟡 | Text, vectors and images now follow source traversal order in spread XML. Compare visual stacking in InDesign. |
-| Vector paths and closed shapes | 🟡 | In hybrid fallback, isolated solid vectors outside image/gradient bounds remain visible and editable. Check overlapping and grouped vectors, holes, compound paths, open lines and transforms. |
+| Vector paths and closed shapes | 🟡 | In hybrid fallback, opaque solid vectors outside complex artwork or above it in stacking order remain visible and editable. Check transparency, grouped vectors, holes, compound paths, open lines and transforms. |
 | Stroke weight, fill and stroke colour | 🟡 | Check alignment, caps, joins, dashes and arrowheads. |
 | Colour gradients | 🟡 | Check stops, colour spaces, transforms and gradient strokes. |
 | Opacity, blend modes and layer effects | 🟡 | Linear image transparency is baked into PNG alpha; general object effects are missing. |
@@ -71,6 +71,8 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Output and current verification
 
+- 🟡 v1.21.0 adds a full diagnostics JSON text box to the result dialog using the documented multi-line `DialogTextBox` with 12 visible rows; the native control is expected to scroll. The Summary has its own group, a spacer above it and separate rows for pages, editable content, typography, object inventory and property audit. The VM dialog test passes; the real modal UI has not yet been inspected because opening the Script Manager panel exits Affinity. v1.21.0 is installed in Script Manager and its read-back SHA-256 hash matches the source. Installed-version cleanup is still unavailable through the bridge.
+- 🟡 v1.21.0 applies Affinity `StoryInterface.textUiScale` to text metrics. The largest terra headline had a source UI scale of 2.1700 while its raw glyph height was 60; the earlier IDML wrote 60 pt. The Affinity bridge export/import/render now reproduces its three-line visual size. Vectors above an image/gradient in source stacking order remain editable even when their bounding boxes overlap; the lower-right TERRA logo is absent from the artwork PNG and present in the imported render. This is a document-independent rule. InDesign verification remains pending.
 - 🟡 v1.20.0 was exported through the Affinity MCP host from `terra-gepszerelo-hirdetes`, reimported and rendered. The top-left JCB logo is supplied by visible editable vector polygons and is absent from the raster backdrop. The top-right one-line frame grew from 40.81 pt to 75.6 pt and no longer oversets in the Affinity round trip. Affinity's `AllCaps` enum wrapper string is now written as `Capitalization="AllCaps"`. VM tests include overlapping and isolated vectors plus a multi-paragraph control. v1.20.0 is installed in Script Manager; its read-back SHA-256 hash matches the source. InDesign verification and direct Script Panel execution are pending. Installed v1.18.0 cleanup is pending because the bridge has no delete operation and opening the panel closes Affinity.
 - 🔴 The source's red plus bullets inside the multi-line text frame are absent from the imported IDML. This was already present in the v1.19 fallback and is not caused by v1.20. The source preview renders the bullets but the artwork-only raster does not; list/bullet formatting needs a dedicated mapping or fallback.
 - 🟡 v1.19.0 restores the exact v1.15.0 executable code under a new versioned filename. A normalized source comparison found no code differences, and syntax/VM tests passed. It was installed through the Script Manager bridge without opening the panel; the library lists it and the installed copy matches the source SHA-256 hash. A real Script Panel export remains pending. This is a rollback release; the v1.16+ global changes are not in v1.19.0.
@@ -114,7 +116,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Project files
 
-- Exporter: `finished scripts/Export to IDML v1.20.0.js`
+- Exporter: `finished scripts/Export to IDML v1.21.0.js`
 - Runner: `tools/run_idml_export.cjs`
 - Tests and probes: `tests/idml_export.cjs`, `tests/probe_idml_*.js`
 - Shared API references: `I:\Affinity\scripts\workspace\docs`

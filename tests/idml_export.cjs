@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.20.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.21.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
@@ -19,14 +19,27 @@ assert.ok(Math.abs(api.minimumSingleLineFrameHeight({
 assert.equal(api.minimumSingleLineFrameHeight({
     paragraphs: [{}, {}], runs: [{ text: 'Two lines', style: { pointSize: 60 } }]
 }), 0);
-const isolated = { kind: 'vector', visible: true, sourceNode: {},
+const isolated = { kind: 'vector', visible: true, sourceNode: {}, opacity: 1,
+    sourceOrder: 3,
     fill: { space: 'CMYK' }, bounds: { x: 0, y: 0, width: 100, height: 100 } };
 assert.equal(api.isolatedHybridVectors({ objects: [isolated, {
     kind: 'image', x: 200, y: 200, width: 100, height: 100
 }] }).length, 1);
 assert.equal(api.isolatedHybridVectors({ objects: [isolated, {
-    kind: 'image', x: 50, y: 50, width: 100, height: 100
+    kind: 'image', x: 50, y: 50, width: 100, height: 100, sourceOrder: 4
 }] }).length, 0);
+assert.equal(api.isolatedHybridVectors({ objects: [isolated, {
+    kind: 'image', x: 50, y: 50, width: 100, height: 100, sourceOrder: 2
+}] }).length, 1);
+assert.equal(api.textUiScale({ storyInterface: { textUiScale: {
+    data: [2.17, 0, 0, 0, 2.17, 0]
+} } }), 2.17);
+const scaledStyle = { pointSize: 60, leading: 70, baselineShift: 2 };
+api.scaleFrameText({ runs: [{ text: 'A', style: scaledStyle }],
+    paragraphCharacterStyles: [scaledStyle],
+    paragraphs: [{ leading: 70, spaceBefore: 4, spaceAfter: 0 }] }, 2);
+assert.equal(scaledStyle.pointSize, 120);
+assert.equal(scaledStyle.leading, 140);
 assert.equal(api.strokeWeightInPoints({ lineWeight: 6, lineStyleDescriptor: { isScale: false } }, 0.24), 1.44);
 assert.equal(api.strokeWeightInPoints({ lineWeight: 6,
     lineStyleDescriptor: { isScale: true, effectiveWeight: () => 9 } }, 0.24), 2.16);
@@ -449,6 +462,10 @@ vm.runInNewContext(source, {
                 assert.equal(dialogControls['Diagnostics report'].text,
                     'C:\\Desktop\\Sample IDML export 2\\Sample.diagnostics.json');
                 assert.equal(dialogControls['Export folder'].text, 'C:\\Desktop\\Sample IDML export 2');
+                assert.equal(dialogControls['Report contents'].isMultiLine, true);
+                assert.equal(dialogControls['Report contents'].rowSpan, 12);
+                assert.equal(JSON.parse(dialogControls['Report contents'].text).document, 'Sample.af');
+                assert.match(dialogControls['Object inventory'].text, /exported/);
                 dialogControls['Open IDML in Affinity'].onClickHandler();
             },
         }; } } };
