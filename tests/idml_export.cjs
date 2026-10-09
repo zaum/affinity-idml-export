@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.14.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.15.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
@@ -151,6 +151,18 @@ gradientFixture.spreads[0].objects[0].fill = { type: 'gradient', kind: 'Linear',
 ] };
 gradientFixture.spreads[0].objects[0].fillAngle = 45;
 const gradientParts = api.makeParts(gradientFixture);
+assert.equal(api.needsHybridArtwork({ spreads: gradientFixture.spreads }), true);
+assert.equal(api.needsHybridArtwork({ spreads: fixture.spreads }), false);
+const hybridText = { diagnostics: { dpi: 192 }, spreads: [{ frames: [{
+    artText: true, width: 100, height: 20,
+    runs: [{ style: { family: 'Gotham', pointSize: 14.25, leading: 15 } }],
+    paragraphCharacterStyles: [], paragraphs: [{ leading: 12 }],
+}] }] };
+api.applyHybridTextMetrics(hybridText);
+assert.equal(hybridText.spreads[0].frames[0].width, 200);
+assert.equal(hybridText.spreads[0].frames[0].height, 40);
+assert.equal(hybridText.spreads[0].frames[0].runs[0].style.pointSize, 38);
+assert.equal(hybridText.spreads[0].frames[0].paragraphs[0].leading, 32);
 assert.match(gradientParts.find(p => p.name === 'Resources/Graphic.xml').content,
     /<Gradient Self="Gradient\/idml1"/);
 assert.match(gradientParts.find(p => p.name === 'Spreads/Spread_spread1.xml').content,
