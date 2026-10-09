@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.16.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.17.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
@@ -153,6 +153,7 @@ gradientFixture.spreads[0].objects[0].fillAngle = 45;
 const gradientParts = api.makeParts(gradientFixture);
 assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: gradientFixture.spreads })), [0]);
 assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: fixture.spreads })), []);
+assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: [{ objects: [], requiresRasterFallback: true }] })), [0]);
 assert.deepEqual(Array.from(api.rasterFallbackPages({ spreads: [fixture.spreads[0], gradientFixture.spreads[0]] })), [1]);
 const gradientWithoutText = JSON.parse(JSON.stringify(gradientFixture.spreads[0]));
 gradientWithoutText.frames = [];
@@ -401,9 +402,11 @@ reportWritten = null;
 const dialogControls = {};
 let dialogShown = false;
 let openedPath = null;
+const scheduled = [];
 vm.runInNewContext(source, {
     __IDML_SKIP_PREVIEWS__: true,
     require(id) {
+        if (id === '/timers') return { setTimeout(delay, callback) { scheduled.push(callback); } };
         if (id === '/dialog') return { Dialog: { create() { return {
             addColumn() { return { addGroup() { return {
                 addStaticText(label, initial) {
@@ -447,6 +450,10 @@ vm.runInNewContext(source, {
     },
     console: { log() {} },
 });
+assert.equal(dialogShown, false, 'script launch should return before export work');
+assert.equal(written, null, 'script launch should not write before the first timer');
+for (let ticks = 0; scheduled.length && ticks < 100; ticks++) scheduled.shift()();
+assert.equal(scheduled.length, 0, 'scheduled export should finish');
 assert.ok(dialogShown && written && reportWritten && written.length > 100);
 assert.equal(openedPath, 'C:\\Desktop/Sample IDML export 2/Sample.idml');
 assert.equal(folders.size, 2);
