@@ -25,7 +25,7 @@ The versioned `Export to IDML via MCP` launchers call the same runner. Bridge ac
 ## Test
 
 ```powershell
-node --check "finished scripts/Export to IDML v1.13.0.js"
+node --check "finished scripts/Export to IDML v1.14.0.js"
 node tests/idml_export.cjs
 ```
 
@@ -39,6 +39,6 @@ The VM test covers IDML packaging, XML, text formatting, diagnostics and unique 
 - `IDML_EXPORT_ROADMAP.md` — English feature and verification status.
 - `agents.md` — project workflow rules; the roadmap must be updated with every exporter, test or host-finding change.
 
-The newest exporter is **v1.13.0**. It writes fixed paragraph leading to IDML character ranges, including empty paragraph markers. Named text styles, threaded text frames, facing-page spreads and full colour-profile preservation remain open work.
+The newest exporter is **v1.14.0**. It preserves source layer names as flat IDML layers and emits text, vectors and images in source traversal order. Nested image clips use closed vector ancestors when available; an image parent falls back to its rectangular bounds. Group hierarchy and image alpha masking remain open work.
 
 Local Affinity documents, generated IDML packages and comparison screenshots are kept out of the public repository.

@@ -1,6 +1,6 @@
 # Affinity to IDML Export Roadmap
 
-Updated: 2026-10-09. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.13.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
+Updated: 2026-10-09. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.14.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
 
 ## Status key
 
@@ -43,8 +43,9 @@ These icons describe implementation progress. They do not certify visual or typo
 | Feature | Status | Remaining work |
 |---|---|---|
 | Object position and size | 🟢 | Check rotation, shear, nonuniform scale and off-page objects. |
-| Visibility | 🟡 | Hidden objects are moved to a shared hidden layer; original hierarchy is lost. |
-| Groups, layer names and hierarchy, locks and print state | 🔴 | Group nodes are flattened; child objects remain exportable. |
+| Visibility | 🟡 | Source layer visibility and object visibility are written separately. Hidden groups are still flattened. |
+| Groups, layer names and hierarchy, locks and print state | 🟡 | ContainerNode names become flat IDML layers; nested names become a joined path, and source locks are copied when readable. Group nodes are flattened. Identically named paths may merge. |
+| Object stacking order | 🟡 | Text, vectors and images now follow source traversal order in spread XML. Compare visual stacking in InDesign. |
 | Vector paths and closed shapes | 🟡 | Check holes, compound paths, open lines and transforms. |
 | Stroke weight, fill and stroke colour | 🟡 | Check alignment, caps, joins, dashes and arrowheads. |
 | Colour gradients | 🟡 | Check stops, colour spaces, transforms and gradient strokes. |
@@ -55,7 +56,7 @@ These icons describe implementation progress. They do not certify visual or typo
 | Feature | Status | Remaining work |
 |---|---|---|
 | Embedded raster image, placement and size | 🟢 | Compare pixel dimensions, PPI and colour appearance. The source is re-encoded as PNG. |
-| Image clipping path | 🟡 | Closed shape or polycurve parents work; test compound and transformed clips. |
+| Image clipping path | 🟡 | Closed shape/polycurve ancestors work across intervening groups. An image parent uses its rectangular bounds; its pixel alpha is not transferred as a clip mask. Test compound, transformed and real nested clips. |
 | Per-image ICC profile | 🟡 | The resource exposes a profile name, but non-sRGB ICC bytes are not embedded. |
 | Image gradient transparency | 🟡 | Only a local linear gradient is supported; it is baked into alpha. |
 | Original image format, link and source path | 🔴 | The API exposes metadata; implement a safe packaging and link policy. |
@@ -70,10 +71,11 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Output and current verification
 
-- 🟢 v1.13.0 creates a unique Desktop folder for each run. The IDML file, diagnostics JSON and retained page-preview PNGs are written into that folder. The report records their full paths.
-- 🟢 Syntax, VM and Affinity-host export/import tests passed. The v1.13.0 host probe used `fejlecek`: one page, three text frames, and a successful IDML import.
-- 🟢 v1.13.0 is installed in Affinity Script Manager. The saved installed copy in `tests/installed_idml_v1.13.0.js` has the same SHA-256 hash as the versioned source.
-- 🟡 Direct Script Editor permission and the result dialog have not been retested in the real host for v1.13.0. InDesign fidelity and fixed-leading layout have not been checked.
+- 🟢 v1.14.0 creates a unique Desktop folder for each run. The IDML file, diagnostics JSON and retained page-preview PNGs are written into that folder. The report records their full paths.
+- 🟢 Syntax and VM tests passed, including nested layer paths, source order, group-separated vector clips and image-parent bounds. An Affinity-host export/import passed on `FB-tavasz-820x360.ai` with one image, five text frames and nested groups.
+- 🟢 v1.14.0 is installed in Affinity Script Manager. The installed copy in `tests/installed_idml_v1.14.0.js` matches the source SHA-256 hash.
+- 🟡 No real image-inside-image or image-inside-vector fixture was available in the open host documents. The nested clip behavior is verified in the VM only. Visual stacking and InDesign fidelity remain unverified.
+- 🟡 Direct Script Editor permission and the result dialog have not been retested in the real host for v1.14.0.
 - 🔴 Moving the **Open IDML** action into the native OK button row and closing the modal when it is clicked is unresolved. The documented `DialogApi` has no programmatic close method; use a host-verified interaction pattern before marking this done.
 - 🟢 The public project repository is `https://github.com/zaum/affinity-idml-export`. Local Affinity documents, generated IDML files and comparison screenshots are excluded from Git.
 
@@ -83,7 +85,7 @@ These icons describe implementation progress. They do not certify visual or typo
 2. Preserve named text styles, then verify fixed leading, kerning and terminal paragraph formatting in InDesign.
 3. Read real page margins and handle facing-page spreads.
 4. Preserve image ICC data and improve clipping/transparency mapping.
-5. Rebuild layer hierarchy, vector stroke properties and effects.
+5. Rebuild group hierarchy, resolve duplicate layer paths, preserve image alpha masks, vector stroke properties and effects.
 6. Add less common structures only after confirming their Affinity API access.
 
 ## Completion rule for each feature
@@ -95,7 +97,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Project files
 
-- Exporter: `finished scripts/Export to IDML v1.13.0.js`
+- Exporter: `finished scripts/Export to IDML v1.14.0.js`
 - Runner: `tools/run_idml_export.cjs`
 - Tests and probes: `tests/idml_export.cjs`, `tests/probe_idml_*.js`
 - Shared API references: `I:\Affinity\scripts\workspace\docs`

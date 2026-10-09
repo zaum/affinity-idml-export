@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.13.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.14.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
@@ -74,6 +74,57 @@ const fixture = {
 };
 
 const packageBytes = api.zipStore(api.makeParts(fixture));
+const layerFixture = JSON.parse(JSON.stringify(fixture));
+layerFixture.layers = [{ id: 'layerSource1', name: 'Print / Photos', visible: true, locked: false },
+    { id: 'layerSource2', name: 'Hidden art', visible: false, locked: true }];
+layerFixture.spreads[0].objects[0].layer = 'layerSource2';
+layerFixture.spreads[0].objects[1].layer = 'layerSource1';
+layerFixture.spreads[0].frames[0].layer = 'layerSource1';
+layerFixture.spreads[0].frames[0].kind = 'frame';
+const layerParts = api.makeParts(layerFixture);
+const layerMap = layerParts.find(p => p.name === 'designmap.xml').content;
+const layerSpread = layerParts.find(p => p.name === 'Spreads/Spread_spread1.xml').content;
+assert.match(layerMap, /<Layer Self="layerSource1" Name="Print \/ Photos" Visible="true"/);
+assert.match(layerMap, /<Layer Self="layerSource2" Name="Hidden art" Visible="false" Locked="true"/);
+assert.match(layerSpread, /<Polygon Self="vector1" ItemLayer="layerSource2"/);
+assert.match(layerSpread, /<Polygon Self="picture1" ItemLayer="layerSource1"/);
+assert.match(layerSpread, /<TextFrame Self="frame1"[^>]*ItemLayer="layerSource1"/);
+layerFixture.spreads[0].items = [layerFixture.spreads[0].frames[0],
+    layerFixture.spreads[0].objects[1], layerFixture.spreads[0].objects[0]];
+const orderedSpread = api.makeParts(layerFixture)
+    .find(p => p.name === 'Spreads/Spread_spread1.xml').content;
+assert.ok(orderedSpread.indexOf('<TextFrame Self="frame1"') <
+    orderedSpread.indexOf('<Polygon Self="picture1"'));
+assert.ok(orderedSpread.indexOf('<Polygon Self="picture1"') <
+    orderedSpread.indexOf('<Polygon Self="vector1"'));
+const pageNode = { isShapeNode: true, parent: { isSpreadNode: true },
+    [Symbol.toStringTag]: 'ShapeNode' };
+const outerLayer = { userDescription: 'Print', isVisibleInDomain: true,
+    parent: pageNode, [Symbol.toStringTag]: 'ContainerNode' };
+const innerLayer = { userDescription: 'Photos', isVisibleInDomain: false,
+    parent: outerLayer, [Symbol.toStringTag]: 'ContainerNode' };
+const groupNode = { isGroupNode: true, userDescription: 'Photo group',
+    parent: innerLayer, [Symbol.toStringTag]: 'GroupNode' };
+assert.deepEqual(Array.from(api.ancestry({ parent: groupNode }).layers, x => x.name),
+    ['Print', 'Photos']);
+assert.deepEqual(Array.from(api.ancestry({ parent: groupNode }).groups), ['Photo group']);
+const clipShape = { isShapeNode: true, parent: outerLayer,
+    getSpreadBaseBox: () => ({ x: 10, y: 20, width: 50, height: 40 }) };
+const nestedGroup = { isGroupNode: true, parent: clipShape };
+const clippedImage = { parent: nestedGroup };
+const clip = api.imageClip(clippedImage, 1, node =>
+    node === clipShape ? [{ closed: true, points: [] }] : []);
+assert.equal(clip.frameBox.x, 10);
+assert.equal(clip.clipPaths.length, 1);
+const pageImage = { parent: { isGroupNode: true, parent: pageNode } };
+assert.equal(api.imageClip(pageImage, 1, () => [{ closed: true }]), null);
+const imageParent = { isImageNode: true, parent: outerLayer,
+    getSpreadBaseBox: () => ({ x: 5, y: 10, width: 80, height: 60 }) };
+const imageInsideImage = api.imageClip({ parent: { isGroupNode: true,
+    parent: imageParent } }, 0.5);
+assert.equal(imageInsideImage.clipKind, 'imageBounds');
+assert.equal(imageInsideImage.clipPaths[0].points[2].anchor.x, 40);
+assert.equal(imageInsideImage.clipPaths[0].points[2].anchor.y, 30);
 const fixedLeadingFixture = JSON.parse(JSON.stringify(fixture));
 const fixedFrame = fixedLeadingFixture.spreads[0].frames[0];
 fixedFrame.runs = [{ text: 'First\n\nThird', style: {
