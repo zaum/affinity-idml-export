@@ -96,6 +96,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Completion rule for each feature
 
+- Implement feature handling as a document-independent rule derived from source properties or a documented IDML limitation; sample documents are regression fixtures, never behavior switches. Verify the rule against a contrasting fixture.
 - Verify that the real Affinity host exposes the source property.
 - Verify the generated IDML property through InDesign or a stated fallback, and record any loss.
 - Keep a small reproducible regression fixture and inspect the affected real project page visually.

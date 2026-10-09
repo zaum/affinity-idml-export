@@ -12,6 +12,7 @@ The parent `I:\Affinity\scripts\agents.md` also applies. Shared Affinity API doc
 4. Update `tools/run_idml_export.cjs` and `tests/idml_export.cjs` to target the newest script. Run `node --check` and the VM test. Use a small live Affinity document for a host probe when possible.
 5. Reinstall the new version through Affinity Script Manager. Confirm that Script Manager lists it, save the installed copy into `tests`, and compare its SHA-256 hash with the source. A local file alone is not an installed script.
 6. Never force-restart Affinity. Its Script Manager rereads scripts on the next run. Preserve the open document and report any real-host API behavior that remains unverified.
+7. Build a general exporter. Every fix must follow an Affinity object type, readable property, or documented IDML limitation and apply consistently to every affected document and page. Never trigger behavior from a document title, filename, sample-specific object combination, or hard-coded measurements. Use named documents only as regression fixtures. Before accepting a fix, test the general rule with a contrasting fixture (for example, another DPI, a page without text, or a page without the unsupported feature), and record the rule and remaining limits in the roadmap.
 
 ## Project layout
 
