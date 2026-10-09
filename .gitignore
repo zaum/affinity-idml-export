@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.log
+IDML_EXPORT_ROADMAP.hu.md
+*.af
+tests/generated_*.idml
+tests/kisokos_*.png
