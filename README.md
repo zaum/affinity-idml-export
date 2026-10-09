@@ -25,7 +25,7 @@ The versioned `Export to IDML via MCP` launchers call the same runner. Bridge ac
 ## Test
 
 ```powershell
-node --check "finished scripts/Export to IDML v1.15.0.js"
+node --check "finished scripts/Export to IDML v1.16.0.js"
 node tests/idml_export.cjs
 ```
 
@@ -39,6 +39,6 @@ The VM test covers IDML packaging, XML, text formatting, diagnostics and unique 
 - `IDML_EXPORT_ROADMAP.md` — English feature and verification status.
 - `agents.md` — project workflow rules; the roadmap must be updated with every exporter, test or host-finding change.
 
-The newest exporter is **v1.15.0**. For documents combining text, images and gradient vectors, it adds an artwork-only raster backdrop behind editable text. The original artwork stays on a hidden editable layer, and the full-page visual proof is hidden by default. This fallback preserves the visible artwork while vector gradient, masking and typography mappings remain incomplete. The FB-tavasz-820x360.ai host export/import/render succeeded; its text still shows small position and glyph-shape differences from the source.
+The newest exporter is **v1.16.0**. It treats host typography values as points independently of document DPI, reserves composition room for artistic text, and uses ASCII-safe export paths. Any page with a vector gradient gets an artwork-only raster backdrop behind editable text; the original artwork remains on a hidden editable layer. Other pages retain editable vectors and images. This rule follows the unsupported source feature, not a document name or a particular mix of text and images. The full-page visual proof is hidden by default. Image alpha masking, vector gradient fidelity and exact typography remain open work.
 
 Local Affinity documents, generated IDML packages and comparison screenshots are kept out of the public repository.

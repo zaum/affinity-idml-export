@@ -71,6 +71,9 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Output and current verification
 
+- 🟡 v1.16.0 removes the FB-tavasz content-mix trigger and fallback-only text scaling. Typography is read as point-valued host data on every document; page geometry alone uses 72/DPI. Artistic text frames receive composition room on every document. Raster fallback is selected per page by vector-gradient presence, including pages without text, while unaffected pages retain their editable artwork. Syntax and VM tests passed. A separate 144-DPI host document exposed glyph heights of 92 and 40 point-like units, independently supporting the unit correction; visual round-trip verification remains open.
+- 🟡 A separate PSD exported successfully but Affinity could not reopen its IDML from a decomposed-Unicode folder name. The same package imported successfully from an ASCII path. v1.16.0 folds export folder/file names to ASCII; its live round-trip check is pending. The larger `terra-jcb-fb-caroussel` document exceeded the MCP request timeout during a full export.
+- 🟢 v1.16.0 was saved to Affinity Script Manager. The read-back source in `tests/installed_idml_v1.16.0.js` matches the release source SHA-256 hash.
 - 🟢 v1.15.0 creates a unique Desktop folder for each run. The IDML file, diagnostics JSON and retained page-preview PNGs are written into that folder. The report records their full paths.
 - 🟡 FB-tavasz-820x360.ai exposed a severe visual mismatch hidden by the formerly visible full-page proof: gradients became a large solid polygon, and editable text was too small and overset. v1.15.0 hides the full-page proof and, for pages with text, images and gradient vectors, places an artwork-only PNG behind corrected editable text. Original vectors and images remain on a hidden layer. The artwork PNG from the v1.15.0 host export is pixel-identical to the independently verified diagnostic artwork render. The final v1.15.0 IDML was imported and rendered in Affinity: the artwork matches visually, while text position and glyph shape still differ slightly from the source preview. InDesign rendering remains unverified.
 - 🟡 Hybrid text metrics use the source document DPI divided by 72 for point size, leading and baseline shift, and enlarge artistic text frames to prevent overset. Verify against other documents and InDesign before generalizing this fallback.
@@ -100,7 +103,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Project files
 
-- Exporter: `finished scripts/Export to IDML v1.15.0.js`
+- Exporter: `finished scripts/Export to IDML v1.16.0.js`
 - Runner: `tools/run_idml_export.cjs`
 - Tests and probes: `tests/idml_export.cjs`, `tests/probe_idml_*.js`
 - Shared API references: `I:\Affinity\scripts\workspace\docs`
