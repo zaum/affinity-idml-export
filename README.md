@@ -10,6 +10,8 @@ Install the newest file in [`finished scripts`](finished%20scripts) through Affi
 
 The script starts exporting immediately and shows the full output paths when it finishes. The result dialog includes an **Open IDML in Affinity** button. The direct Script Editor permission and dialog interaction still require a real-host check for the current version.
 
+The Open IDML button currently sits inside the result content and does not dismiss the modal dialog. A native OK-row action with close-on-click remains open because the documented Affinity dialog API exposes no programmatic close operation.
+
 ## Run through the MCP bridge
 
 From this project folder, with Affinity and its MCP bridge running:

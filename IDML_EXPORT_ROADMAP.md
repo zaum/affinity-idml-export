@@ -72,9 +72,10 @@ These icons describe implementation progress. They do not certify visual or typo
 
 - 🟢 v1.13.0 creates a unique Desktop folder for each run. The IDML file, diagnostics JSON and retained page-preview PNGs are written into that folder. The report records their full paths.
 - 🟢 Syntax, VM and Affinity-host export/import tests passed. The v1.13.0 host probe used `fejlecek`: one page, three text frames, and a successful IDML import.
+- 🟢 v1.13.0 is installed in Affinity Script Manager. The saved installed copy in `tests/installed_idml_v1.13.0.js` has the same SHA-256 hash as the versioned source.
 - 🟡 Direct Script Editor permission and the result dialog have not been retested in the real host for v1.13.0. InDesign fidelity and fixed-leading layout have not been checked.
 - 🔴 Moving the **Open IDML** action into the native OK button row and closing the modal when it is clicked is unresolved. The documented `DialogApi` has no programmatic close method; use a host-verified interaction pattern before marking this done.
-- 🔴 A GitHub repository for this project has not yet been created or published.
+- 🟢 The public project repository is `https://github.com/zaum/affinity-idml-export`. Local Affinity documents, generated IDML files and comparison screenshots are excluded from Git.
 
 ## Next implementation order
 
