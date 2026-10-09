@@ -1,6 +1,6 @@
 # Affinity to IDML Export Roadmap
 
-Updated: 2026-10-09. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.14.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
+Updated: 2026-10-09. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.20.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
 
 ## Status key
 
@@ -27,7 +27,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 | Feature | Status | Remaining work |
 |---|---|---|
-| Editable text frames, Unicode and paragraph boundaries | 🟢 | Check empty paragraphs and end-of-story formatting visually. |
+| Editable text frames, Unicode and paragraph boundaries | 🟢 | A one-line frame shorter than its exported font size is expanded vertically. Check empty paragraphs, multi-line overset and end-of-story formatting visually. |
 | Font family, face, PostScript name and size | 🟢 | Test missing and variable fonts. Font files are not packaged. |
 | Tracking, automatic and manual kerning, scaling, skew, baseline shift | 🟡 | Compare zero, Auto and manual values through a round trip. |
 | Paragraph spacing, indents, leading and auto leading | 🟡 | Fixed paragraph leading is now written on character ranges, including empty paragraph markers. Compare its layout in InDesign and check glyph overrides. |
@@ -46,7 +46,7 @@ These icons describe implementation progress. They do not certify visual or typo
 | Visibility | 🟡 | Source layer visibility and object visibility are written separately. Hidden groups are still flattened. |
 | Groups, layer names and hierarchy, locks and print state | 🟡 | ContainerNode names become flat IDML layers; nested names become a joined path, and source locks are copied when readable. Group nodes are flattened. Identically named paths may merge. |
 | Object stacking order | 🟡 | Text, vectors and images now follow source traversal order in spread XML. Compare visual stacking in InDesign. |
-| Vector paths and closed shapes | 🟡 | Check holes, compound paths, open lines and transforms. |
+| Vector paths and closed shapes | 🟡 | In hybrid fallback, isolated solid vectors outside image/gradient bounds remain visible and editable. Check overlapping and grouped vectors, holes, compound paths, open lines and transforms. |
 | Stroke weight, fill and stroke colour | 🟡 | Check alignment, caps, joins, dashes and arrowheads. |
 | Colour gradients | 🟡 | Check stops, colour spaces, transforms and gradient strokes. |
 | Opacity, blend modes and layer effects | 🟡 | Linear image transparency is baked into PNG alpha; general object effects are missing. |
@@ -71,6 +71,8 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Output and current verification
 
+- 🟡 v1.20.0 was exported through the Affinity MCP host from `terra-gepszerelo-hirdetes`, reimported and rendered. The top-left JCB logo is supplied by visible editable vector polygons and is absent from the raster backdrop. The top-right one-line frame grew from 40.81 pt to 75.6 pt and no longer oversets in the Affinity round trip. Affinity's `AllCaps` enum wrapper string is now written as `Capitalization="AllCaps"`. VM tests include overlapping and isolated vectors plus a multi-paragraph control. v1.20.0 is installed in Script Manager; its read-back SHA-256 hash matches the source. InDesign verification and direct Script Panel execution are pending. Installed v1.18.0 cleanup is pending because the bridge has no delete operation and opening the panel closes Affinity.
+- 🔴 The source's red plus bullets inside the multi-line text frame are absent from the imported IDML. This was already present in the v1.19 fallback and is not caused by v1.20. The source preview renders the bullets but the artwork-only raster does not; list/bullet formatting needs a dedicated mapping or fallback.
 - 🟡 v1.19.0 restores the exact v1.15.0 executable code under a new versioned filename. A normalized source comparison found no code differences, and syntax/VM tests passed. It was installed through the Script Manager bridge without opening the panel; the library lists it and the installed copy matches the source SHA-256 hash. A real Script Panel export remains pending. This is a rollback release; the v1.16+ global changes are not in v1.19.0.
 - 🔴 The user confirmed that Affinity exits by itself when the Script Manager panel opens, before starting v1.19.0. The bridge remained available while the panel was closed, allowing installation and read-back. The installed v1.17.0 and v1.18.0 entries remain in the library because the available bridge has no delete operation and the panel cannot currently be used. Do not run those versions; remove them through a supported Script Manager action when the panel is stable.
 - 🔴 The user reports that v1.18.0 also freezes or closes Affinity within 1–2 seconds on any document, including a single circle. Comparing v1.15→v1.16→v1.18 shows the extra preflight traversal in v1.18 as the main circle-document startup difference; this is a hypothesis, not a proven crash stack. Do not use v1.18.0. Reintroduce global changes from the v1.15 baseline one at a time with real-host checks.
@@ -112,7 +114,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Project files
 
-- Exporter: `finished scripts/Export to IDML v1.19.0.js`
+- Exporter: `finished scripts/Export to IDML v1.20.0.js`
 - Runner: `tools/run_idml_export.cjs`
 - Tests and probes: `tests/idml_export.cjs`, `tests/probe_idml_*.js`
 - Shared API references: `I:\Affinity\scripts\workspace\docs`

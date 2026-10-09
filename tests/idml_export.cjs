@@ -6,13 +6,27 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.19.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.20.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
     console,
 });
 assert.ok(api, 'test hook did not expose the package builder');
+assert.ok(Math.abs(api.minimumSingleLineFrameHeight({
+    paragraphs: [{}], runs: [{ text: 'Location', style: { pointSize: 60, leading: 0 } }]
+}) - 75.6) < 1e-9);
+assert.equal(api.minimumSingleLineFrameHeight({
+    paragraphs: [{}, {}], runs: [{ text: 'Two lines', style: { pointSize: 60 } }]
+}), 0);
+const isolated = { kind: 'vector', visible: true, sourceNode: {},
+    fill: { space: 'CMYK' }, bounds: { x: 0, y: 0, width: 100, height: 100 } };
+assert.equal(api.isolatedHybridVectors({ objects: [isolated, {
+    kind: 'image', x: 200, y: 200, width: 100, height: 100
+}] }).length, 1);
+assert.equal(api.isolatedHybridVectors({ objects: [isolated, {
+    kind: 'image', x: 50, y: 50, width: 100, height: 100
+}] }).length, 0);
 assert.equal(api.strokeWeightInPoints({ lineWeight: 6, lineStyleDescriptor: { isScale: false } }, 0.24), 1.44);
 assert.equal(api.strokeWeightInPoints({ lineWeight: 6,
     lineStyleDescriptor: { isScale: true, effectiveWeight: () => 9 } }, 0.24), 2.16);
