@@ -1,6 +1,6 @@
 # Affinity to IDML exporter
 
-An experimental Affinity script that exports a multi-page document to an IDML package with editable text, vector shapes and embedded raster images. Every run creates a uniquely named folder on the Desktop containing the IDML file, a property-audit JSON report and page-preview PNGs.
+An experimental Affinity script that exports a multi-page document to an IDML package with editable text, vector shapes and embedded raster images. Every run creates a uniquely named folder inside `Desktop/IDML Exports` containing the IDML file, a property-audit JSON report and page-preview PNGs.
 
 The exporter is being developed against the Affinity 3.3 scripting API. It does not implement the full IDML format. See [the roadmap](IDML_EXPORT_ROADMAP.md) for feature status, known data loss and verification results.
 
@@ -25,7 +25,7 @@ The versioned `Export to IDML via MCP` launchers call the same runner. Bridge ac
 ## Test
 
 ```powershell
-node --check "finished scripts/Export to IDML v1.21.0.js"
+node --check "finished scripts/Export to IDML v1.22.0.js"
 node tests/idml_export.cjs
 ```
 

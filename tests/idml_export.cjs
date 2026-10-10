@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.21.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.22.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
@@ -208,7 +208,7 @@ assert.equal(packageBytes[0], 0x50);
 assert.equal(packageBytes[1], 0x4b);
 assert.ok(packageBytes.length > 100);
 assert.equal(api.chooseFolder('C:\\Desktop', 'test.af', p => p.endsWith('/test IDML export')),
-    'C:\\Desktop/test IDML export 2');
+    'C:\\Desktop/IDML Exports/test IDML export 2');
 
 const py = [
     'import io, sys, zipfile, xml.etree.ElementTree as ET',
@@ -294,11 +294,13 @@ const fontApi = {
     },
     GlyphAttsApi: {
         getFont: a => a.face,
-        getDoubleValue: (a, kind) => kind === 3 ? -1 :
+        getDoubleValue: (a, kind) => kind === 4 ? (a.face === 'Bold' ? 0.05 : 0) :
+            kind === 3 ? -1 :
             kind === 2 ? (a.face === 'Bold' ? 0.1 : 0) :
             (a.face === 'Regular' ? 24 : 28),
     },
-    GlyphAttDoubleType: { Height: 1, ManualKerning: 2, AutoKernMinHeight: 3 },
+    GlyphAttDoubleType: { Height: 1, ManualKerning: 2, AutoKernMinHeight: 3,
+        CharacterSpacing: 4 },
     FontApi: {
         getFamilyName: () => 'Arial',
         getTraitsName: face => face,
@@ -317,8 +319,13 @@ assert.equal(read.spreads[0].frames[0].runs[1].style.pointSize, 14);
 assert.equal(read.spreads[0].frames[0].runs[0].style.kerningValue, undefined);
 assert.equal(read.spreads[0].frames[0].runs[0].style.kerningMethod, '$ID/None');
 assert.equal(read.spreads[0].frames[0].runs[1].style.kerningValue, 100);
+assert.equal(read.spreads[0].frames[0].runs[1].style.tracking, 50);
 assert.match(api.makeParts(read).find(p => p.name.startsWith('Stories/')).content,
     /KerningMethod="\$ID\/None" KerningValue="100"/);
+assert.match(api.makeParts(read).find(p => p.name.startsWith('Stories/')).content,
+    /Tracking="50"/);
+assert.match(api.makeParts(read).find(p => p.name.startsWith('Spreads/')).content,
+    /TextFramePreference AutoSizingType="HeightOnly"/);
 assert.equal(read.spreads[0].frames[0].paragraphs[0].hyphenation, 'false');
 assert.equal(read.spreads[0].frames[0].paragraphs[0].spaceAfter, 10);
 assert.equal(read.spreads[0].frames[0].paragraphs[1].hyphenation, 'true');
@@ -419,8 +426,8 @@ vm.runInNewContext(source, {
 });
 assert.ok(written && written.length > 100);
 assert.ok(reportWritten && reportWritten.length > 100);
-assert.deepEqual(Array.from(folders), ['C:\\Desktop/Sample IDML export']);
-assert.ok(createdFiles.every(p => p.startsWith('C:\\Desktop/Sample IDML export/')));
+assert.deepEqual(Array.from(folders), ['C:\\Desktop/IDML Exports', 'C:\\Desktop/IDML Exports/Sample IDML export']);
+assert.ok(createdFiles.every(p => p.startsWith('C:\\Desktop/IDML Exports/Sample IDML export/')));
 const report = JSON.parse(Buffer.from(reportWritten).toString('utf8'));
 assert.equal(report.summary.approximated, 1);
 assert.equal(report.pages[0].objects[0].idmlId, 'frame1');
@@ -458,10 +465,10 @@ vm.runInNewContext(source, {
                 assert.ok(written && reportWritten, 'export and report should finish before the result dialog');
                 assert.match(dialogControls['Status'].text, /Export complete/);
                 assert.equal(dialogControls['Full file path'].text,
-                    'C:\\Desktop\\Sample IDML export 2\\Sample.idml');
+                    'C:\\Desktop\\IDML Exports\\Sample IDML export 2\\Sample.idml');
                 assert.equal(dialogControls['Diagnostics report'].text,
-                    'C:\\Desktop\\Sample IDML export 2\\Sample.diagnostics.json');
-                assert.equal(dialogControls['Export folder'].text, 'C:\\Desktop\\Sample IDML export 2');
+                    'C:\\Desktop\\IDML Exports\\Sample IDML export 2\\Sample.diagnostics.json');
+                assert.equal(dialogControls['Export folder'].text, 'C:\\Desktop\\IDML Exports\\Sample IDML export 2');
                 assert.equal(dialogControls['Report contents'].isMultiLine, true);
                 assert.equal(dialogControls['Report contents'].rowSpan, 12);
                 assert.equal(JSON.parse(dialogControls['Report contents'].text).document, 'Sample.af');
@@ -483,6 +490,6 @@ vm.runInNewContext(source, {
     console: { log() {} },
 });
 assert.ok(dialogShown && written && reportWritten && written.length > 100);
-assert.equal(openedPath, 'C:\\Desktop/Sample IDML export 2/Sample.idml');
-assert.equal(folders.size, 2);
+assert.equal(openedPath, 'C:\\Desktop/IDML Exports/Sample IDML export 2/Sample.idml');
+assert.equal(folders.size, 3);
 process.stdout.write('Affinity VM export path passed\n');
