@@ -11,10 +11,10 @@ const { Client } = managerRequire('@modelcontextprotocol/sdk/client/index.js');
 const { SSEClientTransport } = managerRequire('@modelcontextprotocol/sdk/client/sse.js');
 const { CallToolResultSchema } = managerRequire('@modelcontextprotocol/sdk/types.js');
 
-const scriptPath = path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.24.0.js');
+const scriptPath = path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.30.0.js');
 const source = fs.readFileSync(scriptPath, 'utf8');
 const transport = new SSEClientTransport(new URL('http://localhost:6767/sse'));
-const client = new Client({ name: 'idml-export', version: '1.24.0' });
+const client = new Client({ name: 'idml-export', version: '1.30.0' });
 
 function content(result) {
     return (result.content || []).filter(item => item.type === 'text').map(item => item.text).join('\n');
@@ -58,9 +58,10 @@ async function main() {
                     'const { FontApi } = require("affinity:fonts");' : '') +
                 'let imported = null;' +
                 'try { imported = Document.load(' + JSON.stringify(importPath) + ');' +
-                'let frames = 0, chars = 0, firstBox = "", fontFaces = [], images = 0, vectors = 0;' +
+                'let frames = 0, chars = 0, firstBox = "", fontFaces = [], images = 0, visibleImages = 0, vectors = 0;' +
                 'for (const n of imported.layers.all) {' +
-                'if (n.isImageNode) images++; if (n.isShapeNode || n.isPolyCurveNode) vectors++;' +
+                'if (n.isImageNode) { images++; if (n.isVisibleInDomain !== false) visibleImages++; }' +
+                'if (n.isShapeNode || n.isPolyCurveNode) vectors++;' +
                 'if (n.isFrameTextNode || n.isArtTextNode) {' +
                 'frames++; chars += String(n.text || "").length;' +
                 (checkFonts ? 'const r = n.storyRange, s = n.story;' +
@@ -73,7 +74,7 @@ async function main() {
                 'firstBox = [b.x,b.y,b.width,b.height].join(","); } } }' +
                 'console.log("IDML import page count: " + imported.pageCount +' +
                 '", text frames: " + frames + ", characters: " + chars + ", images: " + images +' +
-                '", vectors: " + vectors + ", first box: " + firstBox +' +
+                '", visible images: " + visibleImages + ", vectors: " + vectors + ", first box: " + firstBox +' +
                 '", font faces: " + fontFaces.join("; ")); }' +
                 'finally { if (imported) imported.close(); }';
             const check = await call('execute_script', { script: probe });
