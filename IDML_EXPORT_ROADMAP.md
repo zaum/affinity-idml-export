@@ -1,6 +1,6 @@
 # Affinity to IDML Export Roadmap
 
-Updated: 2026-10-10. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.22.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
+Updated: 2026-10-10. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.23.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
 
 ## Status key
 
@@ -27,10 +27,10 @@ These icons describe implementation progress. They do not certify visual or typo
 
 | Feature | Status | Remaining work |
 |---|---|---|
-| Editable text frames, Unicode and paragraph boundaries | 🟡 | A one-line frame shorter than its exported font size is expanded vertically. v1.22 adds IDML `TextFramePreference AutoSizingType="HeightOnly"`; host and InDesign support, empty paragraphs, multi-line overset and end-of-story formatting need visual checks. |
+| Editable text frames, Unicode and paragraph boundaries | 🟡 | One-line frames expand vertically and, when needed, horizontally to fit visible glyph bounds. The terra top-right frame fits after an Affinity round trip. InDesign and other documents need checks. |
 | Font family, face, PostScript name and size | 🟢 | Apply Affinity StoryInterface `textUiScale` to glyph metrics before writing IDML. Test missing and variable fonts. Font files are not packaged. |
 | Tracking, automatic and manual kerning, scaling, skew, baseline shift | 🟡 | v1.22 converts Affinity fractional-em CharacterSpacing to IDML thousandths of an em (0.05 → 50); VM regression passes. Verify in Affinity and InDesign; compare zero, Auto and manual kerning. |
-| Paragraph spacing, indents, leading and auto leading | 🟡 | Fixed paragraph leading is now written on character ranges, including empty paragraph markers. Compare its layout in InDesign and check glyph overrides. |
+| Paragraph spacing, indents, leading and auto leading | 🟡 | Fixed leading is written on character ranges, including empty paragraph markers. For SVG-recovered inline graphics, source baselines also inform paragraph spacing and indent. The terra six-line layout matches in Affinity; InDesign needs checking. |
 | Hyphenation, alignment, word and letter spacing, keep options | 🟡 | Verify the full value range for each mapped property. |
 | Named paragraph and character styles, inheritance and overrides | 🔴 | Only local formatting and IDML default styles are written today. |
 | Linked text frames and story threading | 🔴 | Each frame currently becomes an independent story. |
@@ -71,9 +71,12 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Output and current verification
 
+- 🟡 v1.23.0 expands clipped one-line frames from visible glyph bounds and reconstructs pinned SVG graphics as editable IDML paths while retaining editable text. On `terra-gepszerelo-hirdetes`, an Affinity export/import/render has the correct Bold Condensed top-right face, a fitting frame, six visible red-plus vectors and six aligned editable text lines. The source Black Condensed headline was also preserved in a fresh v1.22 export; the earlier Heavy Condensed substitution came from stale IDML whose `Fonts.xml` marked all faces Regular. The SVG recovery matches text and sibling graphics generically; unsupported SVG features are reported in diagnostics. Native inline anchoring and grouping are not retained. InDesign verification and direct Script Panel execution remain open.
+- 🟢 v1.23.0 was installed through the Script Manager bridge. `tests/installed_idml_v1.23.0.js` and the release source have matching SHA-256 hashes; syntax and VM checks pass. The current Script Manager bridge has only list/add/save, so installed v1.21.0 removal remains pending under the two-version cleanup rule. The Script Manager panel previously closed Affinity and was not reopened for cleanup.
+- 🟡 An SVG `Document.load` probe closed Affinity; do not repeat it. Full-page SVG export and source reads succeeded. The user authorized and completed a restart; the original terra document was reopened for the subsequent v1.23 round trip.
 - 🟡 v1.22.0 creates the shared `Desktop/IDML Exports` folder, then one unique folder per run. The VM checks folder creation, full paths, tracking 0.05 → 50 and IDML text-frame height auto-sizing. An Affinity bridge export/import passed on an existing one-page Desktop IDML: 4 text frames, 14 vectors and 2 images exported, and the result reopened with one page. The bridge cannot access the regression fixture on `I:` (`Document.load` returned `PERMISSION_DENIED`). v1.22.0 was saved to Script Manager; `tests/installed_idml_v1.22.0.js` matches the source SHA-256. Direct Script Panel execution and visual comparison remain open. The export dialog still appears only after processing: the supported Affinity modal API blocks script execution, so a working pre-export progress window has not been established.
 - 🟡 The two-version cleanup rule now calls for removing installed v1.20.0 after v1.22.0 verification. The available MCP bridge has no delete operation, and the Script Manager panel previously closed Affinity, so library cleanup and verification remain pending.
-- 🔍 The missing red plus signs are `PinGlyph` entries in the source text story, not ordinary character glyphs. The current story reader skips them and the text-frame child/enclosure collections were empty in a host probe. Their native vector content needs an API probe and an IDML inline-object mapping; no visual preservation is claimed yet.
+- 🟡 Red plus signs are `PinGlyph` entries in the source text story. Native pin geometry is unavailable through the current text-frame API, so v1.23 recovers matching graphics from a full-page SVG as editable, separately positioned vector paths. True inline anchoring remains open.
 - 🟡 v1.21.0 adds a full diagnostics JSON text box to the result dialog using the documented multi-line `DialogTextBox` with 12 visible rows; the native control is expected to scroll. The Summary has its own group, a spacer above it and separate rows for pages, editable content, typography, object inventory and property audit. The VM dialog test passes; the real modal UI has not yet been inspected because opening the Script Manager panel exits Affinity. v1.21.0 is installed in Script Manager and its read-back SHA-256 hash matches the source. Installed-version cleanup is still unavailable through the bridge.
 - 🟡 v1.21.0 applies Affinity `StoryInterface.textUiScale` to text metrics. The largest terra headline had a source UI scale of 2.1700 while its raw glyph height was 60; the earlier IDML wrote 60 pt. The Affinity bridge export/import/render now reproduces its three-line visual size. Vectors above an image/gradient in source stacking order remain editable even when their bounding boxes overlap; the lower-right TERRA logo is absent from the artwork PNG and present in the imported render. This is a document-independent rule. InDesign verification remains pending.
 - 🟡 v1.20.0 was exported through the Affinity MCP host from `terra-gepszerelo-hirdetes`, reimported and rendered. The top-left JCB logo is supplied by visible editable vector polygons and is absent from the raster backdrop. The top-right one-line frame grew from 40.81 pt to 75.6 pt and no longer oversets in the Affinity round trip. Affinity's `AllCaps` enum wrapper string is now written as `Capitalization="AllCaps"`. VM tests include overlapping and isolated vectors plus a multi-paragraph control. v1.20.0 is installed in Script Manager; its read-back SHA-256 hash matches the source. InDesign verification and direct Script Panel execution are pending. Installed v1.18.0 cleanup is pending because the bridge has no delete operation and opening the panel closes Affinity.
@@ -119,7 +122,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Project files
 
-- Exporter: `finished scripts/Export to IDML v1.22.0.js`
+- Exporter: `finished scripts/Export to IDML v1.23.0.js`
 - Runner: `tools/run_idml_export.cjs`
 - Tests and probes: `tests/idml_export.cjs`, `tests/probe_idml_*.js`
 - Shared API references: `I:\Affinity\scripts\workspace\docs`

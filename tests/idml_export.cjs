@@ -6,19 +6,37 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.22.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.23.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
     console,
 });
 assert.ok(api, 'test hook did not expose the package builder');
+const inlineSvg = '<svg viewBox="0 0 100 100"><g><g><text x="5" y="20">Alpha</text></g>' +
+    '<g><circle cx="10" cy="20" r="5" style="fill:rgb(180,26,26);"/></g>' +
+    '<g transform="matrix(1,0,0,1,10,0)"><path d="M0,0L10,0L10,10Z" style="fill:white;"/></g>' +
+    '</g></svg>';
+const inlineVectors = api.editableInlineVectors(api.parseSvg(inlineSvg), 'Alpha', 2,
+    { width: 200, height: 200 });
+assert.equal(inlineVectors.length, 2);
+assert.equal(inlineVectors[0].fill.values[0], 180);
+assert.equal(inlineVectors[1].paths[0].points[0].anchor.x, 20);
+assert.equal(inlineVectors[1].paths[0].closed, true);
+assert.equal(api.inlineTextBaselines(api.parseSvg(inlineSvg), 'Alpha', 2,
+    { width: 200, height: 200 }).length, 1);
 assert.ok(Math.abs(api.minimumSingleLineFrameHeight({
     paragraphs: [{}], runs: [{ text: 'Location', style: { pointSize: 60, leading: 0 } }]
 }) - 75.6) < 1e-9);
 assert.equal(api.minimumSingleLineFrameHeight({
     paragraphs: [{}, {}], runs: [{ text: 'Two lines', style: { pointSize: 60 } }]
 }), 0);
+assert.equal(api.minimumSingleLineFrameWidth({ paragraphs: [{}],
+    runs: [{ text: 'Location', style: { pointSize: 60 } }] },
+    { x: 100, width: 500 }, { x: 100, width: 540 }), 567);
+assert.equal(api.minimumSingleLineFrameWidth({ paragraphs: [{}, {}],
+    runs: [{ text: 'Two lines', style: { pointSize: 60 } }] },
+    { x: 100, width: 500 }, { x: 100, width: 540 }), 0);
 const isolated = { kind: 'vector', visible: true, sourceNode: {}, opacity: 1,
     sourceOrder: 3,
     fill: { space: 'CMYK' }, bounds: { x: 0, y: 0, width: 100, height: 100 } };
@@ -373,6 +391,16 @@ const terminalRead = api.readModel({ dpi: 144, title: 'Terminator', spreads: [{ 
     layers: { all: [terminalNode] } }] }, fontApi);
 assert.equal(terminalRead.spreads[0].frames[0].runs[0].text, 'ABC');
 assert.equal(terminalRead.spreads[0].frames[0].paragraphs.length, 1);
+const pinNode = { ...textNode, storyRange: { begin: 0, end: 3 },
+    story: { ...textNode.story, length: 3, isParagraphBreak: () => false,
+        getGlyph: p => p === 1 ? { isPinGlyph: true } :
+            { isCharGlyph: true, string: p === 0 ? 'A' : 'B' } } };
+const pinRead = api.readModel({ dpi: 144, title: 'Pin', spreads: [{ pageCount: 1,
+    getSpreadExtents: () => ({ x: 0, y: 0, width: 1190, height: 1684 }),
+    layers: { all: [pinNode] } }] }, fontApi);
+assert.equal(pinRead.spreads[0].frames[0].runs[0].text, 'AB');
+assert.equal(pinRead.diagnostics.pages[0].objects[0].properties.inlineObjects, 1);
+assert.equal(pinRead.diagnostics.pages[0].objects[0].propertyAudit.inlineObjects.state, 'notMapped');
 const doc = {
     dpi: 144,
     title: 'Sample.af',
