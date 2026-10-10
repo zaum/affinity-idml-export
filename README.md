@@ -25,7 +25,7 @@ The versioned `Export to IDML via MCP` launchers call the same runner. Bridge ac
 ## Test
 
 ```powershell
-node --check "finished scripts/Export to IDML v1.30.0.js"
+node --check "finished scripts/Export to IDML v1.31.0.js"
 node tests/idml_export.cjs
 ```
 
@@ -39,6 +39,6 @@ The VM test covers IDML packaging, XML, text formatting, diagnostics and unique 
 - `IDML_EXPORT_ROADMAP.md` — English feature and verification status.
 - `agents.md` — project workflow rules; the roadmap must be updated with every exporter, test or host-finding change.
 
-The current exporter is **v1.30.0**. It keeps the v1.29.1 text-frame vertical placement inference and changes the dialog's initial width from 640 to 320 points; Start and Open IDML use the full available content width. The VM test checks both dialog settings. Script Manager lists v1.30.0; `tests/installed_idml_v1.30.0.js` matches the source SHA-256 after line-ending normalization (`b24a1e9b26e056c6865ea1d5f74f050e58ae40f260f96a771203c8fc08d74253`). The previous v1.29.1 real-host export on the open `electromax.afpub` identified the centered website footer while the other frames used top alignment. Affinity imported and rendered it with the footer centered inside its orange bar; the previous v1.28.0 render had the footer text crossing the bar edge. Exact v1.30.0 modal appearance has not yet been checked in the live host. InDesign layout remains unverified. v1.29.1 is retained as the rollback. Installed-version cleanup remains pending because the Script Manager bridge exposes no delete action. **Do not run v1.17.0 or v1.18.0:** both were reported to freeze or close Affinity at launch, including on a one-circle document.
+The current exporter is **v1.31.0**. It retains the compact v1.30.0 dialog and uses Affinity's native Base64 conversion for embedded image data, with a portable fallback. This replaces a JavaScript character-by-character encoder in the large image path. A live-host benchmark on a 16 MiB buffer measured 59 ms with the host conversion versus 1,199 ms with the portable encoder (about 20× faster for Base64 conversion; outputs were identical). The open `electromax.afpub` contains a 7,100 × 4,734 px placed image; full-export timing and output fidelity for v1.31.0 still need a live export check. Script Manager lists v1.31.0 and its readback matches `tests/installed_idml_v1.31.0.js` and the source after line-ending normalization (SHA-256 `0739c823670e5d4dd5b82b0b804d53dd8792e194f320b2cefba54f5237e5a567`). v1.30.0 remains the rollback. InDesign layout remains unverified. **Do not run v1.17.0 or v1.18.0:** both were reported to freeze or close Affinity at launch, including on a one-circle document.
 
 Local Affinity documents, generated IDML packages and comparison screenshots are kept out of the public repository.

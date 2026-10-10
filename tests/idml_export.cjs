@@ -5,13 +5,22 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.30.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.31.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
     console,
 });
 assert.ok(api, 'test hook did not expose the package builder');
+const base64Fixture = Uint8Array.from([0, 1, 2, 127, 128, 254, 255]);
+const nativeBufferMock = { create(length) {
+    const array = new Uint8Array(length);
+    return { array, toString(encoding) { return Buffer.from(array).toString(encoding); } };
+} };
+assert.equal(api.base64(base64Fixture, nativeBufferMock), Buffer.from(base64Fixture).toString('base64'),
+    'the host-native Base64 route should match the portable encoder');
+assert.equal(api.base64(base64Fixture, { create() { throw new Error('unsupported'); } }),
+    Buffer.from(base64Fixture).toString('base64'), 'unsupported native conversion falls back safely');
 assert.equal(api.inferVerticalJustification({ y: 0, height: 100 }, { y: 5, height: 25 }).value,
     'TopAlign');
 assert.equal(api.inferVerticalJustification({ y: 0, height: 100 }, { y: 37.5, height: 25 }).value,
