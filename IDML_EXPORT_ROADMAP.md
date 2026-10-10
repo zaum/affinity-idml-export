@@ -1,6 +1,6 @@
 # Affinity to IDML Export Roadmap
 
-Updated: 2026-10-10. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.23.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
+Updated: 2026-10-10. Project root: `I:\Affinity\scripts\idml export script`. Current exporter: `finished scripts/Export to IDML v1.24.0.js`. Shared Affinity API references remain in `I:\Affinity\scripts\workspace\docs`.
 
 ## Status key
 
@@ -49,16 +49,17 @@ These icons describe implementation progress. They do not certify visual or typo
 | Vector paths and closed shapes | 🟡 | In hybrid fallback, opaque solid vectors outside complex artwork or above it in stacking order remain visible and editable. Check transparency, grouped vectors, holes, compound paths, open lines and transforms. |
 | Stroke weight, fill and stroke colour | 🟡 | Check alignment, caps, joins, dashes and arrowheads. |
 | Colour gradients | 🟡 | Check stops, colour spaces, transforms and gradient strokes. |
-| Opacity, blend modes and layer effects | 🟡 | Linear image transparency is baked into PNG alpha; general masks and object effects are missing. Do not treat a vector retained above the page raster as visually equivalent if its ancestor supplies a mask or transparency. |
+| Opacity, blend modes and layer effects | 🟡 | Native image alpha, linear image transparency, parent-image alpha masks and reduced image opacity are baked into PNG alpha. Other masks, blend modes and object effects need mapping. Do not treat a vector retained above the page raster as visually equivalent if its ancestor supplies a mask or transparency. |
 
 ## Images and resources
 
 | Feature | Status | Remaining work |
 |---|---|---|
 | Embedded raster image, placement and size | 🟢 | Compare pixel dimensions, PPI and colour appearance. The source is re-encoded as PNG. |
-| Image clipping path | 🟡 | Closed shape/polycurve ancestors work across intervening groups. An image parent uses its rectangular bounds; its pixel alpha is not transferred as a clip mask. Test compound, transformed and real nested clips. |
+| Image clipping path | 🟡 | Closed shape/polycurve ancestors now include direct parents immediately below a spread. Parent image bounds clip the child, and parent pixel alpha is sampled through both transforms into the child PNG. Test compound, transformed and real nested clips in Affinity and InDesign. |
 | Per-image ICC profile | 🟡 | The resource exposes a profile name, but non-sRGB ICC bytes are not embedded. |
 | Image gradient transparency | 🟡 | Only a local linear gradient is supported; it is baked into alpha. |
+| Native alpha, image masks and image opacity | 🟡 | Native alpha is retained, parent image alpha is sampled through spread transforms, and reduced effective opacity is baked into PNG alpha. A real nested alpha-mask source and non-image masks still need host verification. |
 | Original image format, link and source path | 🔴 | The API exposes metadata; implement a safe packaging and link policy. |
 | Embedded documents, PDF/SVG and rasterized effects | 🔴 | Decide per object whether editable IDML or a declared image fallback is possible. |
 
@@ -71,6 +72,8 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Output and current verification
 
+- 🟡 v1.24.0 retains native image alpha, samples image-ancestor alpha masks and effective opacity into embedded PNG alpha, and captures direct-parent vector clips. A terra Affinity export/import/render succeeded: the original image had 507,349 nonopaque source pixels and a direct Rectangle clip, both recorded in diagnostics; the imported visual remained correct. VM checks cover a transformed parent-image mask and an unmasked contrast fixture. Selection-area PNG export returned `INVALID_OP` in the current Affinity host, so it cannot serve as a general composited-mask fallback. Other mask types and an actual nested image-mask host document remain unverified; InDesign was not tested.
+- 🟢 v1.24.0 was installed through the Script Manager bridge; `tests/installed_idml_v1.24.0.js` matches the source SHA-256, and syntax plus VM tests pass. The two-version cleanup rule now calls for removing installed v1.22.0. The bridge still offers only list/add/save, while opening the Script Manager panel previously closed Affinity, so removal and verification remain pending.
 - 🟡 v1.23.0 expands clipped one-line frames from visible glyph bounds and reconstructs pinned SVG graphics as editable IDML paths while retaining editable text. On `terra-gepszerelo-hirdetes`, an Affinity export/import/render has the correct Bold Condensed top-right face, a fitting frame, six visible red-plus vectors and six aligned editable text lines. The source Black Condensed headline was also preserved in a fresh v1.22 export; the earlier Heavy Condensed substitution came from stale IDML whose `Fonts.xml` marked all faces Regular. The SVG recovery matches text and sibling graphics generically; unsupported SVG features are reported in diagnostics. Native inline anchoring and grouping are not retained. InDesign verification and direct Script Panel execution remain open.
 - 🟢 v1.23.0 was installed through the Script Manager bridge. `tests/installed_idml_v1.23.0.js` and the release source have matching SHA-256 hashes; syntax and VM checks pass. The current Script Manager bridge has only list/add/save, so installed v1.21.0 removal remains pending under the two-version cleanup rule. The Script Manager panel previously closed Affinity and was not reopened for cleanup.
 - 🟡 An SVG `Document.load` probe closed Affinity; do not repeat it. Full-page SVG export and source reads succeeded. The user authorized and completed a restart; the original terra document was reopened for the subsequent v1.23 round trip.
@@ -122,7 +125,7 @@ These icons describe implementation progress. They do not certify visual or typo
 
 ## Project files
 
-- Exporter: `finished scripts/Export to IDML v1.23.0.js`
+- Exporter: `finished scripts/Export to IDML v1.24.0.js`
 - Runner: `tools/run_idml_export.cjs`
 - Tests and probes: `tests/idml_export.cjs`, `tests/probe_idml_*.js`
 - Shared API references: `I:\Affinity\scripts\workspace\docs`

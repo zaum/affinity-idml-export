@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.23.0.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'finished scripts', 'Export to IDML v1.24.0.js'), 'utf8');
 let api;
 vm.runInNewContext(source, {
     __IDML_TEST_HOOK__: exported => { api = exported; },
@@ -143,7 +143,7 @@ assert.ok(orderedSpread.indexOf('<TextFrame Self="frame1"') <
 assert.ok(orderedSpread.indexOf('<Polygon Self="picture1"') <
     orderedSpread.indexOf('<Polygon Self="vector1"'));
 const pageNode = { isShapeNode: true, parent: { isSpreadNode: true },
-    [Symbol.toStringTag]: 'ShapeNode' };
+    isPageNode: true, [Symbol.toStringTag]: 'ShapeNode' };
 const outerLayer = { userDescription: 'Print', isVisibleInDomain: true,
     parent: pageNode, [Symbol.toStringTag]: 'ContainerNode' };
 const innerLayer = { userDescription: 'Photos', isVisibleInDomain: false,
@@ -161,6 +161,9 @@ const clip = api.imageClip(clippedImage, 1, node =>
     node === clipShape ? [{ closed: true, points: [] }] : []);
 assert.equal(clip.frameBox.x, 10);
 assert.equal(clip.clipPaths.length, 1);
+const directClip = api.imageClip({ parent: clipShape }, 1, node =>
+    node === clipShape ? [{ closed: true, points: [] }] : []);
+assert.equal(directClip.clipKind, 'vector');
 const pageImage = { parent: { isGroupNode: true, parent: pageNode } };
 assert.equal(api.imageClip(pageImage, 1, () => [{ closed: true }]), null);
 const imageParent = { isImageNode: true, parent: outerLayer,
@@ -170,6 +173,23 @@ const imageInsideImage = api.imageClip({ parent: { isGroupNode: true,
 assert.equal(imageInsideImage.clipKind, 'imageBounds');
 assert.equal(imageInsideImage.clipPaths[0].points[2].anchor.x, 40);
 assert.equal(imageInsideImage.clipPaths[0].points[2].anchor.y, 30);
+const maskPixels = new Uint8Array([0, 0, 0, 255, 0, 0, 0, 0]);
+const maskParent = { isImageNode: true, rasterWidth: 2, rasterHeight: 1,
+    baseToSpreadTransform: { data: [2, 0, 10, 0, 2, 20] },
+    transparencyFillDescriptor: { fill: { [Symbol.toStringTag]: 'NoFill' } },
+    copyTo(buffer) { buffer.buffer.set(maskPixels); },
+    parent: { isSpreadNode: true } };
+const maskedChild = { baseToSpreadTransform: { data: [2, 0, 10, 0, 2, 20] },
+    parent: maskParent };
+const childPixels = new Uint8Array([20, 30, 40, 200, 20, 30, 40, 200]);
+const pixelApi = { create: (width, height) => ({ buffer: new Uint8Array(width * height * 4) }) };
+assert.equal(api.applyImageAncestorMasks(maskedChild, childPixels, 2, 1,
+    pixelApi, { RGBA8: 0 }, null), 1);
+assert.deepEqual([childPixels[3], childPixels[7]], [200, 0]);
+const plainPixels = new Uint8Array([20, 30, 40, 200]);
+assert.equal(api.applyImageAncestorMasks({ parent: { isSpreadNode: true } },
+    plainPixels, 1, 1, pixelApi, { RGBA8: 0 }, null), 0);
+assert.equal(plainPixels[3], 200);
 const fixedLeadingFixture = JSON.parse(JSON.stringify(fixture));
 const fixedFrame = fixedLeadingFixture.spreads[0].frames[0];
 fixedFrame.runs = [{ text: 'First\n\nThird', style: {

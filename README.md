@@ -25,7 +25,7 @@ The versioned `Export to IDML via MCP` launchers call the same runner. Bridge ac
 ## Test
 
 ```powershell
-node --check "finished scripts/Export to IDML v1.23.0.js"
+node --check "finished scripts/Export to IDML v1.24.0.js"
 node tests/idml_export.cjs
 ```
 
@@ -39,6 +39,6 @@ The VM test covers IDML packaging, XML, text formatting, diagnostics and unique 
 - `IDML_EXPORT_ROADMAP.md` — English feature and verification status.
 - `agents.md` — project workflow rules; the roadmap must be updated with every exporter, test or host-finding change.
 
-The current exporter is **v1.23.0**. On `terra-gepszerelo-hirdetes`, an Affinity bridge export/import/render retained both vector logos, fitted the top-right one-line frame, kept the intended font faces, and reconstructed six red-plus signs as editable vectors next to editable text. The result dialog has a categorized Summary and a multi-line box containing the full diagnostics JSON. Its layout still needs a real modal check. Direct Scripts panel execution and InDesign layout remain unverified. **Do not run v1.17.0 or v1.18.0:** both were reported to freeze or close Affinity at launch, including on a one-circle document.
+The current exporter is **v1.24.0**. On `terra-gepszerelo-hirdetes`, an Affinity bridge export/import/render retained both vector logos, fitted the top-right one-line frame, kept the intended font faces, reconstructed six red-plus signs as editable vectors next to editable text, and retained native image alpha and its direct vector clip. Image-ancestor alpha masks and reduced image opacity are baked into PNG alpha; a real nested-mask document remains to be checked. The result dialog has a categorized Summary and a multi-line box containing the full diagnostics JSON. Its layout still needs a real modal check. Direct Scripts panel execution and InDesign layout remain unverified. **Do not run v1.17.0 or v1.18.0:** both were reported to freeze or close Affinity at launch, including on a one-circle document.
 
 Local Affinity documents, generated IDML packages and comparison screenshots are kept out of the public repository.
